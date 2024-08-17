@@ -31,6 +31,7 @@ options:
   --start START    Start address for disassembly (in hex)
   --stop STOP      Stop address for disassembly (in hex)
   --output OUTPUT  Output filename (without .ctl extension)
+  -v, --verbose    Show more details
 ```
 
 The code does expect your Skoolkit code to be in a certain format:
@@ -44,4 +45,36 @@ The code does expect your Skoolkit code to be in a certain format:
     ├───game.skool
 ```
 
-The output file will be written to the /sources directory.
+And the output file will be written to the /sources directory.
+
+### Example
+
+```
+disassemble --start 0xD602 --stop 0xD60B --output disassemble Booty.z80
+```
+
+Will create the following output in sources/disassemble.ctl:
+```
+  $D602,$01 Restore #REGbc from the stack.
+  $D603,$02 #REGa=#N$03.
+  $D605,$03 Write #REGa to *#R$5BF0.
+  $D608,$03 Call #R$DEA8.
+  $D60B,$03 Jump to #R$CD86.
+```
+
+The more "correct" version of this output would be:
+```
+c $D602 Demo Mode
+@ $D602 label=DemoMode
+  $D602,$01 Restore #REGbc from the stack.
+  $D603,$05 Write "Demo Mode" (#N$03) to #R$5BF0.
+  $D608,$03 Call #R$DEA8.
+  $D60B,$03 Jump to #R$CD86.
+```
+
+As you start to interpret the code, you can group commands together and
+eventually name the functionality.
+
+Obviously this program cannot distinguish between data and instruction
+code, so only use it where the start and end points are known to be
+instructions (else your output will be garbage).

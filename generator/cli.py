@@ -27,6 +27,7 @@ def main():
 	parser.add_argument("--start", type=lambda x: int(x, 0), required=True, help="Start address for disassembly (in hex)")
 	parser.add_argument("--stop", type=lambda x: int(x, 0), required=True, help="Stop address for disassembly (in hex)")
 	parser.add_argument("--output", required=True, help="Output filename (without .ctl extension)")
+	parser.add_argument("-v", "--verbose", action="store_true", help="Show more details")
 
 	args = parser.parse_args()
 
@@ -34,7 +35,10 @@ def main():
 	ctlfile = 'sources/{}.ctl'.format(args.output)
 
 	with open(ctlfile, 'wt') as f:
-		f.write(lines.run())
+		output = lines.run()
+		f.write(output)
+		if args.verbose:
+			print(output)
 
 	print(f"\x1b[1;32mGenerated {ctlfile} successfully.\x1b[0m")
 

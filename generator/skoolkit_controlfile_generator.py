@@ -446,13 +446,13 @@ class Disassembler:
                     self.process_load_3_operation(cmd)
                 # PUSH operations.
                 elif cmd in PUSH:
-                    self.process_push_operation()
+                    self.process_push_operation(cmd)
                 # POP operations.
                 elif cmd in POP:
-                    self.process_pop_operation()
+                    self.process_pop_operation(cmd)
                 # ADC operations.
                 elif cmd in ADC:
-                    self.process_adc_operation()
+                    self.process_adc_operation(cmd)
                 # ADD operations.
                 elif cmd in ADD:
                     self.process_add_operation(cmd)
