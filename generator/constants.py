@@ -568,6 +568,7 @@ ED_2 = {
     0x56: "Interrupt mode 1",
     0x5E: "Interrupt mode 2",
     0x6F: "RLD",
+    0x78: "#REGa=byte from port held by *#REGc.",
     0x79: "Send #REGa to port *#REGc",
     0xA0: "LDI",
     0xA1: "CPI",

@@ -142,9 +142,16 @@ class Disassembler:
         if cmd in ED_2:
             self.lines.append('  ${:X},$02 {}.'.format(self.pc, ED_2[cmd]))
             self._pc += 0x02
+        elif cmd in ED_3:
+            self.lines.append('  ${:X},$03 {}.'.format(self.pc, ED_3[cmd]).format(self.pc + 0x01))
+            self._pc += 0x03
         elif cmd in ED_4:
             self.lines.append('  ${:X},$04 {}.'.format(self.pc, ED_4[cmd]).format(self.get_address(self.pc + 0x02)))
             self._pc += 0x04
+
+    def process_in_operation(self, cmd: int):
+        self.lines.append(f'  ${self.pc:04X},$02 #REGa=byte from port #N${self.snapshot[self.pc+0x01]:02X}.')
+        self._pc += 0x02
 
     def process_increment_operation(self, cmd: int):
         self._context = INC[cmd]
@@ -474,6 +481,8 @@ class Disassembler:
                 # DJNZ.
                 elif cmd in [0x10]:
                     self.process_djnz_operation(cmd)
+                elif cmd in [0xDB]:
+                    self.process_in_operation(cmd)
                 # ED operations.
                 elif cmd == 0xED:
                     self.process_ed_operation(cmd)
