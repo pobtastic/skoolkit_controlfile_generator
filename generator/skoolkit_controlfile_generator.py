@@ -374,9 +374,9 @@ class Disassembler:
             self._pc += 0x01
 
     def process_out_operation(self, cmd: int):
-        value = self.get_address(self.pc + 0x01)
+        value = self.snapshot[self.pc + 0x01]
         if value == 0xFE:
-            self.lines.append('  ${:X},$02 Set border to #COLOUR${:02X}.'.format(self.pc, value))
+            self.lines.append(f'  ${self.pc:04X},$02 Set border to the colour held by #REGa.')
         else:
             self.lines.append('  ${:X},$02 OUT #N${:02X}'.format(self.pc, value))
         self._pc += 0x02
