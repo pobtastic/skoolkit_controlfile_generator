@@ -180,6 +180,10 @@ class Disassembler:
                 self.lines.append('  ${:X},$03 Write {} to *#REGix+#N${:02X}.'.format(self.pc, IX_LOAD[cmd],
                                                                               self.snapshot[self.pc + 0x02]))
                 self._pc += 0x03
+            elif cmd in [0x22]:
+                value = self.get_address(self.pc + 0x02)
+                self.lines.append('  ${:X},$04 Write {} to *#R${:X}.'.format(self.pc, IX_LOAD[cmd], value))
+                self._pc += 0x04
             elif cmd in [0x2A]:
                 value = self.get_address(self.pc + 0x02)
                 self.lines.append('  ${:X},$04 {}=*#R${:X}.'.format(self.pc, IX_LOAD[cmd], value))
@@ -246,6 +250,10 @@ class Disassembler:
                 self.lines.append('  ${:X},$03 Write {} to *#REGiy+#N${:02X}.'.format(self.pc, IY_LOAD[cmd],
                                                                               self.snapshot[self.pc + 0x02]))
                 self._pc += 0x03
+            elif cmd in [0x22]:
+                value = self.get_address(self.pc + 0x02)
+                self.lines.append('  ${:X},$04 Write {} to #R${:X}.'.format(self.pc, IY_LOAD[cmd], value))
+                self._pc += 0x04
             else:
                 value = self.get_address(self.pc + 0x02)
                 self.lines.append('  ${:X},$04 {}=#R${:X}.'.format(self.pc, IY_LOAD[cmd], value))
