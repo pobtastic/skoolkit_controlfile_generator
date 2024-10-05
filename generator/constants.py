@@ -567,6 +567,7 @@ ED_2 = {
     0x52: "#REGhl-=#REGde (with carry)",
     0x56: "Interrupt mode 1",
     0x5E: "Interrupt mode 2",
+    0x5F: "#REGa=the contents of the Memory Refresh Register",
     0x6F: "RLD",
     0x78: "#REGa=byte from port held by *#REGc.",
     0x79: "Send #REGa to port *#REGc",
