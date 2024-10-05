@@ -201,6 +201,9 @@ class Disassembler:
         elif cmd in IX_ADD:
             self.lines.append('  ${:X},$02 {}.'.format(self.pc, IX_ADD[cmd]))
             self._pc += 0x02
+        elif cmd == 0xE9:
+            self.lines.append('  ${:X},$02 Jump to *#REGix.'.format(self.pc))
+            self._pc += 0x02
         elif cmd in IX_ADC:
             self.lines.append('  ${:X},$03 {}.'.format(self.pc, IX_ADC[cmd]).format(self.snapshot[self.pc + 0x02]))
             self._pc += 0x03
