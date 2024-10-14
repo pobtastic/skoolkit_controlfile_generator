@@ -7,11 +7,12 @@ from .constants import ODDBALLS, FLIPPED_ODDBALLS, ADD, ADC, AND, CALL, CP, DEC,
 
 class Disassembler:
 
-    def __init__(self, snapshot: bytes, pc: int, end: int, context: Optional[Dict] = None):
+    def __init__(self, snapshot: bytes, pc: int, end: int, context: Optional[Dict] = None, number_context: Optional[Dict] = None):
         self.snapshot = snapshot
         self._pc = pc
         self._end = end
         self._context = context or ''
+        self._number_context = number_context or 0x00
         self._toggle = False
         self._aggregate: List[str] = []
         self._lines: List[str] = []
@@ -27,6 +28,10 @@ class Disassembler:
     @property
     def context(self) -> str:
         return self._context
+
+    @property
+    def number_context(self) -> str:
+        return self._number_context
 
     @property
     def toggle(self) -> bool:
@@ -101,6 +106,9 @@ class Disassembler:
         # "Normal" call.
         if cmd == 0xCD:
             self.lines.append(f'  ${self.pc:04X},$03 Call #R${self.get_address(self.pc + 0x01):04X}.')
+        # Sign flag.
+        elif cmd == 0xFC:
+            self.lines.append(f'  ${self.pc:04X},$03 Call #R${self.get_address(self.pc + 0x01):04X} if {self.context} is less than #N${self.number_context:02X} (unsigned comparison).')
         # Everything else.
         else:
             self.lines.append(f'  ${self.pc:04X},$03 Call #R${self.get_address(self.pc + 0x01):04X} {CALL[cmd]}.')
@@ -114,8 +122,9 @@ class Disassembler:
     def process_compare_operation(self, cmd: int):
         self._context = '#REGa'
         if cmd == 0xFE:
+            self._number_context = self.snapshot[self.pc + 0x01]
             self.lines.append(
-                '  ${:X},$02 Compare #REGa with #N${:02X}.'.format(self.pc, self.snapshot[self.pc + 0x01]))
+                '  ${:X},$02 Compare #REGa with #N${:02X}.'.format(self.pc, self.number_context))
             self._pc += 0x02
         else:
             self.lines.append('  ${:X},$01 Compare #REGa with {}.'.format(self.pc, CP[cmd]))
@@ -207,6 +216,12 @@ class Disassembler:
         elif cmd in IX_ADC:
             self.lines.append('  ${:X},$03 {}.'.format(self.pc, IX_ADC[cmd]).format(self.snapshot[self.pc + 0x02]))
             self._pc += 0x03
+        elif cmd == 0x23:
+            self.lines.append('  ${:X},$02 Increment #REGix by one.'.format(self.pc))
+            self._pc += 0x02
+        elif cmd == 0x2B:
+            self.lines.append('  ${:X},$02 Decrease #REGix by one.'.format(self.pc))
+            self._pc += 0x02
         elif cmd == 0x34:
             self.lines.append('  ${:X},$03 Increment *#REGix+#N${:02X} by one.'.format(self.pc, self.snapshot[self.pc + 0x02]))
             self._pc += 0x03
@@ -273,6 +288,12 @@ class Disassembler:
         elif cmd in IY_ADC:
             self.lines.append('  ${:X},$03 {}.'.format(self.pc, IY_ADC[cmd]).format(self.snapshot[self.pc + 0x02]))
             self._pc += 0x03
+        elif cmd == 0x23:
+            self.lines.append('  ${:X},$02 Increment #REGiy by one.'.format(self.pc))
+            self._pc += 0x02
+        elif cmd == 0x2B:
+            self.lines.append('  ${:X},$02 Decrease #REGiy by one.'.format(self.pc))
+            self._pc += 0x02
         elif cmd == 0x34:
             self.lines.append('  ${:X},$03 Increment *#REGiy+#N${:02X} by one.'.format(self.pc, self.snapshot[self.pc + 0x02]))
             self._pc += 0x03
@@ -318,6 +339,10 @@ class Disassembler:
         elif cmd == 0xC3:
             self.lines.append(
                 '  ${:X},$03 Jump to #R${:X}.'.format(self.pc, self.get_address(self.pc + 0x01), JUMP[cmd]))
+        # Sign flag.
+        elif cmd == 0xFA:
+            self.lines.append(
+                '  ${:X},$03 Jump to #R${:X} {}.'.format(self.pc, self.get_address(self.pc + 0x01), JUMP[cmd]).format(self.context, self.number_context))
         # Everything else.
         else:
             self.lines.append(
@@ -333,8 +358,9 @@ class Disassembler:
             self.lines.append(
                 '  ${:X},$02 Write #N${:02X} to *#REGhl.'.format(self.pc, self.snapshot[self.pc + 0x01]))
         else:
+            self._number_context = self.snapshot[self.pc + 0x01]
             self.lines.append(
-                '  ${:X},$02 {}=#N${:02X}.'.format(self.pc, LOAD_2[cmd], self.snapshot[self.pc + 0x01]))
+                '  ${:X},$02 {}=#N${:02X}.'.format(self.pc, LOAD_2[cmd], self.number_context))
         self._pc += 0x02
 
     def process_load_3_operation(self, cmd: int):
@@ -419,7 +445,7 @@ class Disassembler:
         self._pc += count
 
     def process_return_operation(self, cmd: int):
-        self.lines.append(f'  ${self.pc:04X},$01 {RET[cmd]}.')
+        self.lines.append(f'  ${self.pc:04X},$01 {RET[cmd]}.'.format(self.context, self.number_context))
         self._pc += 0x01
 
     def process_sbc_operation(self, cmd: int):

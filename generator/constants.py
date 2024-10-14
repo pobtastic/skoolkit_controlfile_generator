@@ -1,5 +1,4 @@
 
-
 ODDBALLS = {
     0x00: "No operation",
     0x07: "RLCA",
@@ -73,7 +72,7 @@ CALL = {
     0xE4: "is odd",
     0xEC: "is even",
     0xF4: "P",
-    0xFC: "M",
+    0xFC: "if {} is lower than #N${:02X} (unsigned comparison)",
 }
 
 CP = {
@@ -133,7 +132,7 @@ JUMP = {
     0xE9: "*#REGhl",
     0xEA: "if {} is even",
     0xF2: "P",
-    0xFA: "M",
+    0xFA: "if {} is lower than #N${:02X} (unsigned comparison)",
 }
 
 LOAD_1 = {
@@ -263,7 +262,7 @@ RET = {
     0xE0: "Return if {} is odd",
     0xE8: "Return if {} is even",
     0xF0: "Return P",
-    0xF8: "Return M",
+    0xF8: "Return if {} is lower than #N${:02X} (unsigned comparison)",
 }
 
 SBC = {
@@ -564,6 +563,7 @@ ED_2 = {
     0x42: "#REGhl-=#REGbc",
     0x44: "NEG",
     0x46: "Interrupt mode 0",
+    0x4D: "Return from the interrupt routine",
     0x52: "#REGhl-=#REGde (with carry)",
     0x56: "Interrupt mode 1",
     0x5E: "Interrupt mode 2",
