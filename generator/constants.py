@@ -64,15 +64,15 @@ AND = {
 }
 
 CALL = {
-    0xC4: "not zero",
-    0xCC: "zero",
+    0xC4: "if {} is not equal to {}",
+    0xCC: "if {} is equal to {}",
     0xCD: "nn",
-    0xD4: "is higher",
-    0xDC: "is lower",
-    0xE4: "is odd",
-    0xEC: "is even",
-    0xF4: "P",
-    0xFC: "if {} is lower than #N${:02X} (unsigned comparison)",
+    0xD4: "if {} is greater than {}",
+    0xDC: "if {} is less than {}",
+    0xE4: "if {} has odd parity (P flag is reset)",
+    0xEC: "if {} has even parity (P flag is set)",
+    0xF4: "if {} is greater than or equal to {}",
+    0xFC: "if {} is lower than {}",
 }
 
 CP = {
@@ -119,20 +119,20 @@ INC = {
 
 JUMP = {
     0x18: "nn",
-    0x20: "if {} is not zero",
-    0x28: "if {} is zero",
-    0x30: "if {} is higher",
-    0x38: "if {} is lower",
-    0xC2: "if {} is not zero",
+    0x20: "if {} is not equal to {}",
+    0x28: "if {} is equal to {}",
+    0x30: "if {} is greater than or equal to {}",
+    0x38: "if {} is less than {}",
+    0xC2: "if {} is not equal to {}",
     0xC3: "nn",
-    0xCA: "if {} is zero",
-    0xD2: "if {} is higher",
-    0xDA: "if {} is lower",
-    0xE2: "if {} is odd",
+    0xCA: "if {} is equal to {}",
+    0xD2: "if {} is greater than {}",
+    0xDA: "if {} is less than {}",
+    0xE2: "if {} has odd parity (P flag is reset)",
     0xE9: "*#REGhl",
-    0xEA: "if {} is even",
-    0xF2: "P",
-    0xFA: "if {} is lower than #N${:02X} (unsigned comparison)",
+    0xEA: "if {} has even parity (P flag is set)",
+    0xF2: "if {} is greater than or equal to {}",
+    0xFA: "if {} is less than {}",
 }
 
 LOAD_1 = {
@@ -254,15 +254,15 @@ PUSH = {
 }
 
 RET = {
-    0xC0: "Return if {} is not zero",
-    0xC8: "Return if {} is zero",
+    0xC0: "Return if {} is not equal to {}",
+    0xC8: "Return if {} is equal to {}",
     0xC9: "Return",
-    0xD0: "Return if {} is higher",
-    0xD8: "Return if {} is lower",
-    0xE0: "Return if {} is odd",
-    0xE8: "Return if {} is even",
-    0xF0: "Return P",
-    0xF8: "Return if {} is lower than #N${:02X} (unsigned comparison)",
+    0xD0: "Return if {} is greater than {}",
+    0xD8: "Return if {} is less than {}",
+    0xE0: "Return if {} has odd parity (P flag is reset)",
+    0xE8: "Return if {} has even parity (P flag is set)",
+    0xF0: "Return if {} is greater than or equal to {}",
+    0xF8: "Return if {} is lower than {}",
 }
 
 SBC = {

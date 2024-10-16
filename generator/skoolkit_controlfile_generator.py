@@ -4,15 +4,19 @@ from num2words import num2words
 from typing import List, Dict, Optional
 from .constants import ODDBALLS, FLIPPED_ODDBALLS, ADD, ADC, AND, CALL, CP, DEC, INC, JUMP, LOAD_1, LOAD_2, LOAD_3, OR, POP, PUSH, RET, SBC, SUB, XOR, CB_BITS, ED_2, ED_3, ED_4, IX_ADD, IX_ADC, IX_LOAD, IX_CB_BITS, IY_CB_BITS, IY_ADD, IY_ADC, IY_LOAD
 
+SK_NUMBER = 0
+SK_REGISTER = 1
 
 class Disassembler:
 
-    def __init__(self, snapshot: bytes, pc: int, end: int, context: Optional[Dict] = None, number_context: Optional[Dict] = None):
+    def __init__(self, snapshot: bytes, pc: int, end: int, context: Optional[Dict] = None, number_context: Optional[Dict] = None, register_context: Optional[Dict] = None, switch_context: Optional[Dict] = None):
         self.snapshot = snapshot
         self._pc = pc
         self._end = end
-        self._context = context or ''
+        self._context = context or '??'
         self._number_context = number_context or 0x00
+        self._register_context = register_context or '??'
+        self._switch_context = SK_NUMBER
         self._toggle = False
         self._aggregate: List[str] = []
         self._lines: List[str] = []
@@ -30,8 +34,16 @@ class Disassembler:
         return self._context
 
     @property
-    def number_context(self) -> str:
+    def number_context(self) -> int:
         return self._number_context
+
+    @property
+    def register_context(self) -> str:
+        return self._register_context
+
+    @property
+    def switch_context(self) -> str:
+        return self._switch_context
 
     @property
     def toggle(self) -> bool:
@@ -99,6 +111,8 @@ class Disassembler:
             self._pc += 0x02
         # Everything else.
         else:
+            self._register_context = AND[cmd]
+            self._switch_context = SK_REGISTER
             self.lines.append(f'  ${self.pc:04X},$01 Merge the bits from {AND[cmd]}.')
             self._pc += 0x01
 
@@ -106,9 +120,9 @@ class Disassembler:
         # "Normal" call.
         if cmd == 0xCD:
             self.lines.append(f'  ${self.pc:04X},$03 Call #R${self.get_address(self.pc + 0x01):04X}.')
-        # Sign flag.
-        elif cmd == 0xFC:
-            self.lines.append(f'  ${self.pc:04X},$03 Call #R${self.get_address(self.pc + 0x01):04X} if {self.context} is less than #N${self.number_context:02X} (unsigned comparison).')
+        # Calls with context.
+        elif cmd in [0xC4, 0xCC, 0xD4, 0xDC, 0xE4, 0xEC, 0xF4, 0xFC]:
+            self.lines.append(f'  ${self.pc:04X},$03 Call #R${self.get_address(self.pc + 0x01):04X} {CALL[cmd].format(self.context, self.number_context)}.')
         # Everything else.
         else:
             self.lines.append(f'  ${self.pc:04X},$03 Call #R${self.get_address(self.pc + 0x01):04X} {CALL[cmd]}.')
@@ -123,10 +137,13 @@ class Disassembler:
         self._context = '#REGa'
         if cmd == 0xFE:
             self._number_context = self.snapshot[self.pc + 0x01]
+            self._switch_context = SK_NUMBER
             self.lines.append(
                 '  ${:X},$02 Compare #REGa with #N${:02X}.'.format(self.pc, self.number_context))
             self._pc += 0x02
         else:
+            self._register_context = CP[cmd]
+            self._switch_context = SK_REGISTER
             self.lines.append('  ${:X},$01 Compare #REGa with {}.'.format(self.pc, CP[cmd]))
             self._pc += 0x01
 
@@ -329,20 +346,26 @@ class Disassembler:
                                   .format(self.pc, self.pc + 0x02 + (
                     self.snapshot[self.pc + 0x01] - 0x100 if self.snapshot[self.pc + 0x01] >= 0x80 else
                     self.snapshot[self.pc + 0x01])))
+            elif cmd in [0x20, 0x28, 0x30, 0x38]:
+                self.lines.append('  ${:X},$02 Jump to #R${:04X} {}.'
+                                  .format(self.pc, self.pc + 0x02 + (
+                    self.snapshot[self.pc + 0x01] - 0x100 if self.snapshot[self.pc + 0x01] >= 0x80 else
+                    self.snapshot[self.pc + 0x01]), JUMP[cmd]).format(self.context, f'#N${self.number_context:02X}' if self.switch_context == SK_NUMBER else self.register_context))
             else:
                 self.lines.append('  ${:X},$02 Jump to #R${:04X} {}.'
                                   .format(self.pc, self.pc + 0x02 + (
                     self.snapshot[self.pc + 0x01] - 0x100 if self.snapshot[self.pc + 0x01] >= 0x80 else
-                    self.snapshot[self.pc + 0x01]), JUMP[cmd]).format(self.context))
+                    self.snapshot[self.pc + 0x01]), JUMP[cmd]).format(self.context, self.number_context))
             self._pc -= 0x01
         # "Normal" call.
         elif cmd == 0xC3:
             self.lines.append(
                 '  ${:X},$03 Jump to #R${:X}.'.format(self.pc, self.get_address(self.pc + 0x01), JUMP[cmd]))
-        # Sign flag.
-        elif cmd == 0xFA:
+        # Calls with context.
+        elif cmd in [0xC2, 0xCA, 0xD2, 0xDA, 0xF2, 0xFA]:
             self.lines.append(
-                '  ${:X},$03 Jump to #R${:X} {}.'.format(self.pc, self.get_address(self.pc + 0x01), JUMP[cmd]).format(self.context, self.number_context))
+                '  ${:X},$03 Jump to #R${:X} {}.'.format(self.pc, self.get_address(self.pc + 0x01), JUMP[cmd]).format(self.context, f'#N${self.number_context:02X}' if self.switch_context == SK_NUMBER else self.register_context))
+
         # Everything else.
         else:
             self.lines.append(
@@ -411,6 +434,8 @@ class Disassembler:
                 self.snapshot[self.pc + 0x01])))
             self._pc += 0x02
         else:
+            self._register_context = OR[cmd]
+            self._switch_context = SK_REGISTER
             self.lines.append('  ${:X},$01 Set the bits from {}.'.format(self.pc, OR[cmd]))
             self._pc += 0x01
 
@@ -445,7 +470,7 @@ class Disassembler:
         self._pc += count
 
     def process_return_operation(self, cmd: int):
-        self.lines.append(f'  ${self.pc:04X},$01 {RET[cmd]}.'.format(self.context, self.number_context))
+        self.lines.append(f'  ${self.pc:04X},$01 {RET[cmd]}.'.format(self.context, f'#N${self.number_context:02X}' if self.switch_context == SK_NUMBER else self.register_context))
         self._pc += 0x01
 
     def process_sbc_operation(self, cmd: int):
