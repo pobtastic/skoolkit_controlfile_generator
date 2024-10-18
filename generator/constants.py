@@ -563,6 +563,7 @@ ED_2 = {
     0x42: "#REGhl-=#REGbc",
     0x44: "NEG",
     0x46: "Interrupt mode 0",
+    0x47: "#REGi=#REGa",
     0x4D: "Return from the interrupt routine",
     0x52: "#REGhl-=#REGde (with carry)",
     0x56: "Interrupt mode 1",
