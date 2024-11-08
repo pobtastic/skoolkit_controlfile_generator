@@ -103,6 +103,9 @@ class Disassembler:
     def process_and_operation(self, cmd: int):
         # AND A.
         if cmd == 0xA7:
+            self._register_context = '#REGa'
+            self._switch_context = SK_REGISTER
+            self._number_context = 0x00
             self.lines.append(f'  ${self.pc:04X},$01 Set flags.')
             self._pc += 0x01
         # AND nn.
@@ -122,7 +125,7 @@ class Disassembler:
             self.lines.append(f'  ${self.pc:04X},$03 Call #R${self.get_address(self.pc + 0x01):04X}.')
         # Calls with context.
         elif cmd in [0xC4, 0xCC, 0xD4, 0xDC, 0xE4, 0xEC, 0xF4, 0xFC]:
-            self.lines.append(f'  ${self.pc:04X},$03 Call #R${self.get_address(self.pc + 0x01):04X} {CALL[cmd].format(self.context, self.number_context)}.')
+            self.lines.append(f'  ${self.pc:04X},$03 Call #R${self.get_address(self.pc + 0x01):04X} {CALL[cmd].format(self.register_context, f"#N${self.number_context:02X}")}.')
         # Everything else.
         else:
             self.lines.append(f'  ${self.pc:04X},$03 Call #R${self.get_address(self.pc + 0x01):04X} {CALL[cmd]}.')
